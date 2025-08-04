@@ -6,11 +6,14 @@ import socket
 from datetime import datetime
 import random
 
-from user_agent_generator import get_user_agents
+# Replaced the broken import with a static list
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+    "Mozilla/5.0 (Linux; Android 11)"
+]
 
 app = Flask(__name__)
-
-user_agents = get_user_agents()
 
 @app.route('/', methods=['GET'])
 @app.route('/holidays', methods=['GET'])
@@ -52,6 +55,8 @@ def get_holidays(year=datetime.now().year):
             rows = table.find_all('tr')
             for row in rows[1:]:
                 cols = row.find_all('td')
+                if len(cols) < 2:
+                    continue
                 event = cols[0].get_text(strip=True)
                 date = cols[1].get_text(strip=True)
                 holidays.append({'event': event, 'date': date, 'type': holiday_type})
