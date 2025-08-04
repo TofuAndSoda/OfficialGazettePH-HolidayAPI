@@ -5,6 +5,7 @@ import time
 import socket
 from datetime import datetime
 import random
+import os  # for getting the PORT from Render
 
 # Replaced the broken import with a static list
 user_agents = [
@@ -74,5 +75,7 @@ def get_holidays(year=datetime.now().year):
         'holidays': holidays
     })
 
+# ✅ Use this block to work on Render (bind to PORT and 0.0.0.0)
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
