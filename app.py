@@ -7,11 +7,11 @@ from datetime import datetime
 import random
 import os  # for getting the PORT from Render
 
-# Replaced the broken import with a static list
+# ✅ List of user agents to make the request look like a real browser
 user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-    "Mozilla/5.0 (Linux; Android 11)"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 ]
 
 app = Flask(__name__)
@@ -25,15 +25,23 @@ def get_holidays(year=datetime.now().year):
     url = f'https://www.officialgazette.gov.ph/nationwide-holidays/{year}/'
     domain = url.split("//")[-1].split("/")[0]
     
+    # Try to resolve the domain name
     try:
         ip_address = socket.gethostbyname(domain)
     except socket.gaierror:
         return jsonify({'error': 'Failed to resolve domain name'})
 
+    # ✅ Add full browser-like headers to avoid 403
     headers = {
-        'User-Agent': random.choice(user_agents)
+        "User-Agent": random.choice(user_agents),
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Referer": "https://www.google.com/",
+        "Connection": "keep-alive"
     }
-    
+
+    # ✅ Attempt to fetch data
     try:
         response = requests.get(url, headers=headers, timeout=10)
     except requests.ConnectionError:
@@ -46,6 +54,7 @@ def get_holidays(year=datetime.now().year):
     if response.status_code != 200:
         return jsonify({'error': f'Failed to retrieve data, status code: {response.status_code}'})
 
+    # ✅ Parse the HTML with BeautifulSoup
     try:
         soup = BeautifulSoup(response.content, 'html.parser')
         holidays = []
